@@ -2,8 +2,8 @@ import type { DataRow } from '../types';
 
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
-    // Use a direct proxy with minimal headers
-    const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=https://api.anthropic.com/v1/messages';
+    // Use a proxy that supports HTTPS and POST requests
+    const proxyUrl = 'https://api.allorigins.win/post?url=https://api.anthropic.com/v1/messages';
     
     try {
       const response = await fetch(proxyUrl, {
@@ -33,7 +33,12 @@ export const createAnthropicClient = (apiKey: string) => {
         throw new Error(`Failed to get response from AI: ${response.statusText}`);
       }
 
-      const result = await response.json();
+      const proxyResponse = await response.json();
+      if (!proxyResponse.contents) {
+        throw new Error('Invalid proxy response');
+      }
+
+      const result = JSON.parse(proxyResponse.contents);
       return result.content[0].text;
     } catch (error) {
       console.error('Error making API request:', error);
