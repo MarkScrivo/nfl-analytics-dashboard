@@ -2,8 +2,8 @@ import type { DataRow } from '../types';
 
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
-    // Use thingproxy.freeboard.io as it's more reliable for API requests
-    const proxyUrl = 'https://thingproxy.freeboard.io/fetch/https://api.anthropic.com/v1/messages';
+    // Use api.allorigins.win with raw response
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent('https://api.anthropic.com/v1/messages')}`;
     
     try {
       const response = await fetch(proxyUrl, {
@@ -12,7 +12,7 @@ export const createAnthropicClient = (apiKey: string) => {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
           'anthropic-version': '2023-06-01',
-          'Origin': 'https://stackblitz.com',
+          'Origin': 'null',
           'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify({
