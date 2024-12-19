@@ -3,14 +3,14 @@ import type { DataRow } from '../types';
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
     // Use a fetch proxy that supports CORS
-    const response = await fetch('https://proxy.cors.sh/https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://cors-anywhere.herokuapp.com/https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
-        'x-cors-api-key': 'temp_d21234b0c0f1f6c6a0d54f3adf9af404',
-        'Origin': 'https://stackblitz.com'
+        'Origin': 'https://stackblitz.com',
+        'X-Requested-With': 'XMLHttpRequest'
       },
       body: JSON.stringify({
         model: 'claude-3-sonnet-20240229',
