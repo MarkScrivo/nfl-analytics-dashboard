@@ -15,12 +15,16 @@ A React-based dashboard for analyzing NFL game data with AI-powered insights and
   - Natural language queries
   - Automated visualization creation
 
-## Live Demo
+## Important Note About AI Features
 
-You can view and fork this project on StackBlitz:
-[Open in StackBlitz](https://stackblitz.com/github/MarkScrivo/nfl-analytics-dashboard)
+Due to CORS restrictions:
+- AI features (Search and Insights) are fully functional when running the application locally
+- In the StackBlitz environment, these features will display a message explaining the limitation
+- To use AI features, please clone and run the project locally
 
 ## Getting Started
+
+### Local Development (Recommended for Full Features)
 
 1. Clone the repository:
 ```bash
@@ -33,22 +37,33 @@ cd nfl-analytics-dashboard
 npm install
 ```
 
-3. Start both the development server and proxy server:
+3. Start the development server:
 ```bash
 npm run dev
 ```
 
-4. Open http://localhost:5174 in your browser
+4. Open http://localhost:3000 in your browser
 
-## Using AI Features
+### StackBlitz Demo
 
-1. AI Search:
+You can view a demo version on StackBlitz:
+[Open in StackBlitz](https://stackblitz.com/github/MarkScrivo/nfl-analytics-dashboard)
+
+Note: AI features require local development environment.
+
+## Using AI Features (Local Development)
+
+1. Get an API key from Anthropic:
+   - Visit https://console.anthropic.com/
+   - Create an account and generate an API key
+
+2. Using AI Search:
    - Click the "AI Search" tab
    - Enter your Anthropic API key
    - Ask questions about the data in natural language
    - Get AI-powered answers based on the analysis
 
-2. AI Insights:
+3. Using AI Insights:
    - Click the "AI Insights" tab
    - Enter your Anthropic API key
    - Type your specific insight request (e.g., "Show me trends in home team performance")
@@ -87,13 +102,7 @@ The dashboard expects CSV files with the following columns:
 - Plotly.js
 - TailwindCSS
 - Vite
-- Express (Proxy Server)
 - Claude 3 Sonnet (AI)
-
-## Environment Setup
-
-1. Get an API key from Anthropic: https://console.anthropic.com/
-2. Use the key when prompted in the dashboard
 
 ## Contributing
 
