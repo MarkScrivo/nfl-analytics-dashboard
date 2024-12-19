@@ -7,6 +7,17 @@ export const createAnthropicClient = (apiKey: string) => {
     const targetUrl = 'https://api.anthropic.com/v1/messages';
     
     try {
+      // First, make a preflight request
+      await fetch(`${proxyUrl}?url=${encodeURIComponent(targetUrl)}`, {
+        method: 'OPTIONS',
+        headers: {
+          'Access-Control-Request-Method': 'POST',
+          'Access-Control-Request-Headers': 'content-type,x-api-key,anthropic-version',
+          'Origin': 'null'
+        }
+      });
+
+      // Then make the actual request
       const response = await fetch(`${proxyUrl}?url=${encodeURIComponent(targetUrl)}`, {
         method: 'POST',
         headers: {
@@ -48,19 +59,18 @@ export const createAnthropicClient = (apiKey: string) => {
       console.error('Error making API request:', error);
       // Try alternative approach
       try {
-        const altResponse = await fetch('https://api.allorigins.win/post', {
+        const altResponse = await fetch('https://api.allorigins.win/raw', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'Origin': 'null',
+            'X-Requested-With': 'XMLHttpRequest'
           },
           body: JSON.stringify({
             url: targetUrl,
             method: 'POST',
-            contentType: 'application/json',
-            headers: {
-              'x-api-key': apiKey,
-              'anthropic-version': '2023-06-01'
-            },
             data: {
               model: 'claude-3-sonnet-20240229',
               max_tokens: maxTokens,
