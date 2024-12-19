@@ -3,19 +3,29 @@ import type { DataRow } from '../types';
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
     // Use a proxy that's specifically designed for API requests
-    const proxyUrl = 'https://proxy.cors.sh/https://api.anthropic.com/v1/messages';
+    const proxyUrl = 'https://api.allorigins.win/raw';
+    const targetUrl = 'https://api.anthropic.com/v1/messages';
     
     try {
-      const response = await fetch(proxyUrl, {
+      // First, make a preflight request
+      await fetch(`${proxyUrl}?url=${encodeURIComponent(targetUrl)}`, {
+        method: 'OPTIONS',
+        headers: {
+          'Access-Control-Request-Method': 'POST',
+          'Access-Control-Request-Headers': 'content-type,x-api-key,anthropic-version',
+          'Origin': 'null'
+        }
+      });
+
+      // Then make the actual request
+      const response = await fetch(`${proxyUrl}?url=${encodeURIComponent(targetUrl)}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
           'anthropic-version': '2023-06-01',
-          'x-cors-api-key': 'temp_d21234b0c0f1f6c6a0d54f3adf9af404',
-          'x-requested-with': 'XMLHttpRequest',
-          'accept': 'application/json',
-          'origin': 'null'
+          'Origin': 'null',
+          'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify({
           model: 'claude-3-sonnet-20240229',
