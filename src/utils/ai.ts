@@ -3,21 +3,10 @@ import type { DataRow } from '../types';
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
     // Use a proxy that's specifically designed for API requests
-    const proxyUrl = 'https://api.allorigins.win/raw';
+    const proxyUrl = 'https://api.allorigins.win/post';
     const targetUrl = 'https://api.anthropic.com/v1/messages';
     
     try {
-      // First, make a preflight request
-      await fetch(`${proxyUrl}?url=${encodeURIComponent(targetUrl)}`, {
-        method: 'OPTIONS',
-        headers: {
-          'Access-Control-Request-Method': 'POST',
-          'Access-Control-Request-Headers': 'content-type,x-api-key,anthropic-version',
-          'Origin': 'null'
-        }
-      });
-
-      // Then make the actual request
       const response = await fetch(`${proxyUrl}?url=${encodeURIComponent(targetUrl)}`, {
         method: 'POST',
         headers: {
@@ -47,7 +36,12 @@ export const createAnthropicClient = (apiKey: string) => {
         throw new Error(`Failed to get response from AI: ${response.statusText}`);
       }
 
-      const result = await response.json();
+      const proxyResponse = await response.json();
+      if (!proxyResponse.contents) {
+        throw new Error('Invalid proxy response');
+      }
+
+      const result = JSON.parse(proxyResponse.contents);
       return result.content[0].text;
     } catch (error) {
       console.error('Error making API request:', error);
