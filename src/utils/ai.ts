@@ -1,12 +1,24 @@
 import type { DataRow } from '../types';
 
+const isStackBlitz = window.location.hostname.includes('stackblitz.io');
+
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
-    const response = await fetch('/api/anthropic', {
+    // Use CORS proxy in StackBlitz environment
+    const baseUrl = isStackBlitz
+      ? 'https://cors-anywhere.herokuapp.com/https://api.anthropic.com/v1/messages'
+      : '/api/anthropic';
+
+    const response = await fetch(baseUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        ...(isStackBlitz && {
+          'Origin': 'https://stackblitz.com',
+          'X-Requested-With': 'XMLHttpRequest'
+        })
       },
       body: JSON.stringify({
         model: 'claude-3-sonnet-20240229',
