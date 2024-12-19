@@ -1,8 +1,10 @@
 import type { DataRow } from '../types';
 
+const CORS_PROXY = 'https://corsproxy.io/';
+
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch(`${CORS_PROXY}?${encodeURIComponent('https://api.anthropic.com/v1/messages')}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
