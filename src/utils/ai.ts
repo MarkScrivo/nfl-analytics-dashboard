@@ -4,44 +4,55 @@ const isStackBlitz = window.location.hostname.includes('stackblitz.io');
 
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
-    // Use CORS.sh proxy in StackBlitz environment
-    const baseUrl = isStackBlitz
-      ? 'https://proxy.cors.sh/https://api.anthropic.com/v1/messages'
-      : '/api/anthropic';
-
-    const response = await fetch(baseUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        ...(isStackBlitz && {
-          'x-cors-api-key': 'temp_d21234b0c0f1f6c6a0d54f3adf9af404', // Free tier key for testing
-          'Origin': 'https://stackblitz.com'
-        })
-      },
-      body: JSON.stringify({
-        model: 'claude-3-sonnet-20240229',
-        max_tokens: maxTokens,
-        temperature: 0,
-        messages: [{
-          role: 'user',
-          content: [{
-            type: 'text',
-            text: content
+    try {
+      // Direct API call with CORS headers
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, x-api-key, anthropic-version'
+        },
+        body: JSON.stringify({
+          model: 'claude-3-sonnet-20240229',
+          max_tokens: maxTokens,
+          temperature: 0,
+          messages: [{
+            role: 'user',
+            content: [{
+              type: 'text',
+              text: content
+            }]
           }]
-        }]
-      })
-    });
+        })
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('API request failed:', errorText);
-      throw new Error(`Failed to get response from AI: ${response.statusText}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API request failed:', errorText);
+        throw new Error(`Failed to get response from AI: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      return result.content[0].text;
+    } catch (err) {
+      console.error('Error making API request:', err);
+      if (isStackBlitz) {
+        // Fallback message for StackBlitz environment
+        return `Due to CORS restrictions in the StackBlitz environment, the AI features are currently only available when running the application locally. 
+
+To test these features:
+1. Clone the repository
+2. Run locally with 'npm install && npm run dev'
+3. Use your Anthropic API key
+
+Error details: ${err instanceof Error ? err.message : 'Unknown error'}`;
+      }
+      throw err;
     }
-
-    const result = await response.json();
-    return result.content[0].text;
   };
 
   return { createMessage };
