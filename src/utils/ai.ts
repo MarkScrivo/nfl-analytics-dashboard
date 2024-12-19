@@ -2,8 +2,8 @@ import type { DataRow } from '../types';
 
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
-    // Use a proxy service that's known to work well with API requests
-    const proxyUrl = 'https://api.hackers.workers.dev/?url=' + encodeURIComponent('https://api.anthropic.com/v1/messages');
+    // Use a proxy service that's specifically designed for API requests
+    const proxyUrl = 'https://cors.sh/https://api.anthropic.com/v1/messages';
     
     try {
       const response = await fetch(proxyUrl, {
@@ -12,7 +12,9 @@ export const createAnthropicClient = (apiKey: string) => {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
           'anthropic-version': '2023-06-01',
-          'x-requested-with': 'XMLHttpRequest'
+          'x-cors-api-key': 'temp_d21234b0c0f1f6c6a0d54f3adf9af404',
+          'x-requested-with': 'XMLHttpRequest',
+          'accept': 'application/json'
         },
         body: JSON.stringify({
           model: 'claude-3-sonnet-20240229',
