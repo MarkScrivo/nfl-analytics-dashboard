@@ -1,5 +1,10 @@
-export interface DataRow {
+import { PlotData as PlotlyData } from 'plotly.js';
+
+export interface BaseDataRow {
   [key: string]: string | number;
+}
+
+export interface NFLGameData extends BaseDataRow {
   date: string;
   season_type: string;
   home_team: string;
@@ -58,25 +63,9 @@ export interface DataRow {
   away_safeties: number;
   away_passer_rating: number;
   away_yards_per_play: number;
-  home_passing_yards_ma: number;
-  away_passing_yards_ma: number;
-  home_rushing_yards_ma: number;
-  away_rushing_yards_ma: number;
-  home_passing_touchdowns_ma: number;
-  away_passing_touchdowns_ma: number;
-  home_rushing_touchdowns_ma: number;
-  away_rushing_touchdowns_ma: number;
-  home_yards_per_play_ma: number;
-  away_yards_per_play_ma: number;
-  home_time_of_possession_ma: number;
-  away_time_of_possession_ma: number;
-  home_third_down_conversions_ma: number;
-  away_third_down_conversions_ma: number;
-  home_passer_rating_ma: number;
-  away_passer_rating_ma: number;
 }
 
-export type PartialDataRow = Partial<DataRow> & { [key: string]: string | number | undefined };
+export type DataRow = BaseDataRow & Partial<NFLGameData>;
 
 export interface ColumnStats {
   type: 'numeric' | 'string';
@@ -92,14 +81,34 @@ export interface AnalyticsResult {
   columnCount: number;
 }
 
-export interface ChartData {
+export type PlotType = 'scatter' | 'bar' | 'box' | 'violin';
+
+export interface Visualization {
+  type: PlotType;
+  x: string;
+  y: string;
+  title: string;
+  xaxis: string;
+  yaxis: string;
+}
+
+export interface Insight {
+  text: string;
+  visualization?: Visualization;
+}
+
+export interface AIResponse {
+  insights: Insight[];
+}
+
+export type CustomPlotData = Partial<PlotlyData> & {
+  type: PlotType;
   x: (string | number)[];
-  y: number[];
-  type: string;
-  mode?: string;
+  y: (string | number)[];
+  mode?: 'lines' | 'markers' | 'lines+markers';
   name?: string;
   marker?: {
-    color?: string | number[];
+    color?: string | number[] | string[];
     size?: number;
     colorscale?: string;
     showscale?: boolean;
@@ -109,4 +118,4 @@ export interface ChartData {
   };
   text?: string[];
   hovertemplate?: string;
-}
+};

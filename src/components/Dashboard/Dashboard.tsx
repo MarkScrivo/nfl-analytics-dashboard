@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import Plot from 'react-plotly.js';
 import { getNumericValues, formatDate } from '../../utils/charts';
 import { BettingAnalysis } from './BettingAnalysis';
+import { AISearch } from '../AISearch/AISearch';
+import { AIInsights } from '../AIInsights/AIInsights';
 import type { AnalyticsResult, DataRow } from '../../types';
 
 interface DashboardProps {
@@ -9,10 +11,14 @@ interface DashboardProps {
   data: DataRow[];
 }
 
+type TabType = 'performance' | 'betting' | 'ai-search' | 'ai-insights';
+
 export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
   const [selectedTeam, setSelectedTeam] = useState<string>('All Teams');
   const [selectedDate, setSelectedDate] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'performance' | 'betting'>('performance');
+  const [activeTab, setActiveTab] = useState<TabType>('performance');
+  const [apiKey, setApiKey] = useState<string>('');
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
 
   const teams = useMemo(() => {
     const teamSet = new Set<string>();
@@ -57,59 +63,97 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
 
   if (!averages) return <div>No data available for the selected filters</div>;
 
+  const renderTabButton = (tab: TabType, label: string) => (
+    <button
+      className={`px-4 py-2 text-sm font-medium rounded-md ${
+        activeTab === tab
+          ? 'bg-blue-600 text-white'
+          : 'bg-white text-gray-700 hover:bg-gray-50'
+      }`}
+      onClick={() => {
+        if ((tab === 'ai-search' || tab === 'ai-insights') && !apiKey) {
+          setShowApiKeyInput(true);
+        } else {
+          setActiveTab(tab);
+        }
+      }}
+    >
+      {label}
+    </button>
+  );
+
   return (
     <div className="w-full max-w-[2000px] mx-auto">
+      {/* API Key Input Modal */}
+      {showApiKeyInput && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4">Enter Anthropic API Key</h3>
+            <input
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="sk-ant-api-key..."
+              className="w-full p-2 border rounded mb-4"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowApiKeyInput(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (apiKey) {
+                    setShowApiKeyInput(false);
+                    setActiveTab(activeTab === 'ai-search' ? 'ai-search' : 'ai-insights');
+                  }
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                disabled={!apiKey}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Team</label>
-            <select
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              value={selectedTeam}
-              onChange={e => setSelectedTeam(e.target.value)}
-            >
-              {teams.map(team => (
-                <option key={team} value={team}>{team}</option>
-              ))}
-            </select>
+        <div className="grid grid-cols-1 gap-4">
+          <div className="flex flex-wrap gap-2">
+            {renderTabButton('performance', 'Performance')}
+            {renderTabButton('betting', 'Betting Analysis')}
+            {renderTabButton('ai-search', 'AI Search')}
+            {renderTabButton('ai-insights', 'AI Insights')}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Date</label>
-            <select
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              value={selectedDate}
-              onChange={e => setSelectedDate(e.target.value)}
-            >
-              <option value="">All Dates</option>
-              {dates.map(date => (
-                <option key={date} value={date}>{date}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">View</label>
-            <div className="mt-1 flex rounded-md shadow-sm">
-              <button
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-l-md ${
-                  activeTab === 'performance'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-                onClick={() => setActiveTab('performance')}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Team</label>
+              <select
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                value={selectedTeam}
+                onChange={e => setSelectedTeam(e.target.value)}
               >
-                Performance
-              </button>
-              <button
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-r-md ${
-                  activeTab === 'betting'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-                onClick={() => setActiveTab('betting')}
+                {teams.map(team => (
+                  <option key={team} value={team}>{team}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Date</label>
+              <select
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                value={selectedDate}
+                onChange={e => setSelectedDate(e.target.value)}
               >
-                Betting Analysis
-              </button>
+                <option value="">All Dates</option>
+                {dates.map(date => (
+                  <option key={date} value={date}>{date}</option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
@@ -143,7 +187,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
         </div>
       </div>
 
-      {activeTab === 'performance' ? (
+      {/* Main Content */}
+      {activeTab === 'performance' && (
         <div className="bg-white p-6 rounded-lg shadow-md w-full">
           <h2 className="text-xl font-semibold mb-4">Offensive Performance</h2>
           <div className="w-full" style={{ minHeight: '500px' }}>
@@ -185,8 +230,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
             />
           </div>
         </div>
-      ) : (
+      )}
+
+      {activeTab === 'betting' && (
         <BettingAnalysis data={filteredData} />
+      )}
+
+      {activeTab === 'ai-search' && apiKey && (
+        <AISearch data={filteredData} apiKey={apiKey} />
+      )}
+
+      {activeTab === 'ai-insights' && apiKey && (
+        <AIInsights data={filteredData} apiKey={apiKey} />
       )}
     </div>
   );
