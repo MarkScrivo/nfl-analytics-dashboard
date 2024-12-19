@@ -3,17 +3,19 @@ import type { DataRow } from '../types';
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
     // Use a proxy that's specifically designed for API requests
-    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://api.anthropic.com/v1/messages');
+    const proxyUrl = 'https://api.allorigins.win/raw';
+    const targetUrl = 'https://api.anthropic.com/v1/messages';
     
     try {
-      const response = await fetch(proxyUrl, {
+      const response = await fetch(`${proxyUrl}?url=${encodeURIComponent(targetUrl)}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
           'anthropic-version': '2023-06-01',
           'Origin': 'null',
-          'X-Requested-With': 'XMLHttpRequest'
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
         },
         body: JSON.stringify({
           model: 'claude-3-sonnet-20240229',
@@ -35,23 +37,20 @@ export const createAnthropicClient = (apiKey: string) => {
         throw new Error(`Failed to get response from AI: ${response.statusText}`);
       }
 
-      const proxyResponse = await response.json();
-      if (!proxyResponse.contents) {
-        throw new Error('Invalid proxy response');
-      }
-
-      const result = JSON.parse(proxyResponse.contents);
+      const result = await response.json();
       return result.content[0].text;
     } catch (error) {
       console.error('Error making API request:', error);
-      // Try direct request as fallback
+      // Try alternative proxy
       try {
-        const directResponse = await fetch('https://api.anthropic.com/v1/messages', {
+        const altProxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
+        const altResponse = await fetch(altProxyUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01'
+            'anthropic-version': '2023-06-01',
+            'Accept': 'application/json'
           },
           body: JSON.stringify({
             model: 'claude-3-sonnet-20240229',
@@ -67,15 +66,15 @@ export const createAnthropicClient = (apiKey: string) => {
           })
         });
 
-        if (!directResponse.ok) {
-          throw new Error(`Direct request failed: ${directResponse.statusText}`);
+        if (!altResponse.ok) {
+          throw new Error(`Alternative proxy failed: ${altResponse.statusText}`);
         }
 
-        const directResult = await directResponse.json();
-        return directResult.content[0].text;
-      } catch (directError) {
-        console.error('Direct request also failed:', directError);
-        throw error; // Throw original error if both attempts fail
+        const altResult = await altResponse.json();
+        return altResult.content[0].text;
+      } catch (altError) {
+        console.error('Alternative proxy also failed:', altError);
+        throw error; // Throw original error if both proxies fail
       }
     }
   };
