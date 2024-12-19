@@ -2,45 +2,59 @@ import type { DataRow } from '../types';
 
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
-    // Use api.allorigins.win with raw response
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent('https://api.anthropic.com/v1/messages')}`;
-    
-    try {
-      const response = await fetch(proxyUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'Origin': 'null',
-          'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-          model: 'claude-3-sonnet-20240229',
-          max_tokens: maxTokens,
-          temperature: 0,
-          messages: [{
-            role: 'user',
-            content: [{
-              type: 'text',
-              text: content
+    // Use a combination of proxies and try them in sequence
+    const proxies = [
+      'https://api.allorigins.win/raw?url=',
+      'https://thingproxy.freeboard.io/fetch/',
+      'https://cors-anywhere.herokuapp.com/'
+    ];
+
+    let lastError = null;
+
+    // Try each proxy in sequence until one works
+    for (const proxy of proxies) {
+      try {
+        const proxyUrl = `${proxy}${encodeURIComponent('https://api.anthropic.com/v1/messages')}`;
+        
+        const response = await fetch(proxyUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'Origin': 'null',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: JSON.stringify({
+            model: 'claude-3-sonnet-20240229',
+            max_tokens: maxTokens,
+            temperature: 0,
+            messages: [{
+              role: 'user',
+              content: [{
+                type: 'text',
+                text: content
+              }]
             }]
-          }]
-        })
-      });
+          })
+        });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API request failed:', errorText);
-        throw new Error(`Failed to get response from AI: ${response.statusText}`);
+        if (response.ok) {
+          const result = await response.json();
+          return result.content[0].text;
+        }
+
+        lastError = await response.text();
+      } catch (error) {
+        console.error(`Error with proxy ${proxy}:`, error);
+        lastError = error;
+        continue; // Try next proxy
       }
-
-      const result = await response.json();
-      return result.content[0].text;
-    } catch (error) {
-      console.error('Error making API request:', error);
-      throw error;
     }
+
+    // If we get here, all proxies failed
+    console.error('All proxies failed. Last error:', lastError);
+    throw new Error('Failed to get response from AI: All proxies failed');
   };
 
   return { createMessage };
