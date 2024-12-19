@@ -1,6 +1,6 @@
 # NFL Analytics Dashboard
 
-A React-based dashboard for analyzing NFL game data with a focus on betting trends and performance metrics.
+A React-based dashboard for analyzing NFL game data with AI-powered insights and betting trend analysis.
 
 ## Features
 
@@ -10,18 +10,55 @@ A React-based dashboard for analyzing NFL game data with a focus on betting tren
 - Performance metrics visualization
 - Weather impact analysis
 - Anomaly detection in betting patterns
+- AI-powered features:
+  - Custom insight generation
+  - Natural language queries
+  - Automated visualization creation
 
 ## Live Demo
 
 You can view and fork this project on StackBlitz:
-[Open in StackBlitz](https://stackblitz.com/fork/github/your-username/nfl-analytics-dashboard)
+[Open in StackBlitz](https://stackblitz.com/github/MarkScrivo/nfl-analytics-dashboard)
 
 ## Getting Started
 
-1. Fork the project on StackBlitz
-2. Upload your NFL game data CSV file
-3. Use the interactive filters to analyze specific teams or dates
-4. Switch between Performance and Betting Analysis views
+1. Clone the repository:
+```bash
+git clone https://github.com/MarkScrivo/nfl-analytics-dashboard.git
+cd nfl-analytics-dashboard
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Start both the development server and proxy server:
+```bash
+npm run dev
+```
+
+4. Open http://localhost:5174 in your browser
+
+## Using AI Features
+
+1. AI Search:
+   - Click the "AI Search" tab
+   - Enter your Anthropic API key
+   - Ask questions about the data in natural language
+   - Get AI-powered answers based on the analysis
+
+2. AI Insights:
+   - Click the "AI Insights" tab
+   - Enter your Anthropic API key
+   - Type your specific insight request (e.g., "Show me trends in home team performance")
+   - Get AI-generated insights with visualizations
+
+Example prompts for AI Insights:
+- "Analyze betting patterns for games with high spreads"
+- "Find correlations between weather conditions and scoring"
+- "Identify unusual betting line movements"
+- "Show performance trends for specific teams"
 
 ## Data Format
 
@@ -50,15 +87,22 @@ The dashboard expects CSV files with the following columns:
 - Plotly.js
 - TailwindCSS
 - Vite
+- Express (Proxy Server)
+- Claude 3 Sonnet (AI)
 
-## Local Development
+## Environment Setup
 
-```bash
-# Install dependencies
-npm install
+1. Get an API key from Anthropic: https://console.anthropic.com/
+2. Use the key when prompted in the dashboard
 
-# Start development server
-npm run dev
+## Contributing
 
-# Build for production
-npm run build
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details
