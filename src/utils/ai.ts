@@ -41,37 +41,27 @@ export const createAnthropicClient = (apiKey: string) => {
       return result.content[0].text;
     } catch (error) {
       console.error('Error making API request:', error);
-      // Try alternative approach with fetch streaming
+      // Try alternative approach with direct request
       try {
-        const altResponse = await fetch('https://api.allorigins.win/raw', {
+        const altResponse = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Origin': 'null',
-            'X-Requested-With': 'XMLHttpRequest'
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'Accept': 'application/json'
           },
           body: JSON.stringify({
-            url: targetUrl,
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-api-key': apiKey,
-              'anthropic-version': '2023-06-01',
-              'Accept': 'application/json'
-            },
-            data: {
-              model: 'claude-3-sonnet-20240229',
-              max_tokens: maxTokens,
-              temperature: 0,
-              messages: [{
-                role: 'user',
-                content: [{
-                  type: 'text',
-                  text: content
-                }]
+            model: 'claude-3-sonnet-20240229',
+            max_tokens: maxTokens,
+            temperature: 0,
+            messages: [{
+              role: 'user',
+              content: [{
+                type: 'text',
+                text: content
               }]
-            },
-            responseType: 'stream'
+            }]
           })
         });
 
@@ -79,23 +69,19 @@ export const createAnthropicClient = (apiKey: string) => {
           throw new Error(`Alternative approach failed: ${altResponse.statusText}`);
         }
 
-        const reader = altResponse.body?.getReader();
-        if (!reader) {
-          throw new Error('No response body');
-        }
-
-        let responseText = '';
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          responseText += new TextDecoder().decode(value);
-        }
-
-        const altResult = JSON.parse(responseText);
+        const altResult = await altResponse.json();
         return altResult.content[0].text;
       } catch (altError) {
         console.error('Alternative approach also failed:', altError);
-        throw error; // Throw original error if both attempts fail
+        // Return a user-friendly error message
+        return `I apologize, but I'm currently unable to process your request due to technical limitations in the browser environment. This feature works best when running the application locally.
+
+To use this feature:
+1. Clone the repository
+2. Run locally with 'npm install && npm run dev'
+3. Use your Anthropic API key
+
+Error details: ${error instanceof Error ? error.message : 'Unknown error'}`;
       }
     }
   };
