@@ -1,18 +1,24 @@
 import type { DataRow } from '../types';
 
 export const createAnthropicClient = (apiKey: string) => {
-  const baseUrl = 'http://localhost:3001/api/anthropic';
-
   const createMessage = async (content: string, maxTokens: number = 4096) => {
-    const response = await fetch(baseUrl, {
+    const response = await fetch('/api/anthropic', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
       },
       body: JSON.stringify({
-        apiKey,
-        content,
-        maxTokens
+        model: 'claude-3-sonnet-20240229',
+        max_tokens: maxTokens,
+        temperature: 0,
+        messages: [{
+          role: 'user',
+          content: [{
+            type: 'text',
+            text: content
+          }]
+        }]
       })
     });
 
