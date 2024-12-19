@@ -43,30 +43,32 @@ export const createAnthropicClient = (apiKey: string) => {
       console.error('Error making API request:', error);
       // Try alternative approach
       try {
-        const formData = new FormData();
-        formData.append('url', targetUrl);
-        formData.append('method', 'POST');
-        formData.append('headers', JSON.stringify({
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01'
-        }));
-        formData.append('data', JSON.stringify({
-          model: 'claude-3-sonnet-20240229',
-          max_tokens: maxTokens,
-          temperature: 0,
-          messages: [{
-            role: 'user',
-            content: [{
-              type: 'text',
-              text: content
-            }]
-          }]
-        }));
-
-        const altResponse = await fetch('https://api.allorigins.win/proxy', {
+        const altResponse = await fetch('https://api.allorigins.win/get', {
           method: 'POST',
-          body: formData
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: new URLSearchParams({
+            url: targetUrl,
+            method: 'POST',
+            headers: JSON.stringify({
+              'Content-Type': 'application/json',
+              'x-api-key': apiKey,
+              'anthropic-version': '2023-06-01'
+            }),
+            data: JSON.stringify({
+              model: 'claude-3-sonnet-20240229',
+              max_tokens: maxTokens,
+              temperature: 0,
+              messages: [{
+                role: 'user',
+                content: [{
+                  type: 'text',
+                  text: content
+                }]
+              }]
+            })
+          }).toString()
         });
 
         if (!altResponse.ok) {
@@ -74,7 +76,8 @@ export const createAnthropicClient = (apiKey: string) => {
         }
 
         const altResult = await altResponse.json();
-        return altResult.content[0].text;
+        const parsedResult = JSON.parse(altResult.contents);
+        return parsedResult.content[0].text;
       } catch (altError) {
         console.error('Alternative approach also failed:', altError);
         throw error; // Throw original error if both attempts fail
