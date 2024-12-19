@@ -2,8 +2,8 @@ import type { DataRow } from '../types';
 
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
-    // Use a direct proxy with minimal configuration
-    const proxyUrl = 'https://bypass-cors.vercel.app/api?url=' + encodeURIComponent('https://api.anthropic.com/v1/messages');
+    // Use a proxy service that's known to work well with API requests
+    const proxyUrl = 'https://api.hackers.workers.dev/?url=' + encodeURIComponent('https://api.anthropic.com/v1/messages');
     
     try {
       const response = await fetch(proxyUrl, {
@@ -11,7 +11,8 @@ export const createAnthropicClient = (apiKey: string) => {
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01'
+          'anthropic-version': '2023-06-01',
+          'x-requested-with': 'XMLHttpRequest'
         },
         body: JSON.stringify({
           model: 'claude-3-sonnet-20240229',
