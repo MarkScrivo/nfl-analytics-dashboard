@@ -3,21 +3,10 @@ import type { DataRow } from '../types';
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
     // Use a proxy that's specifically designed for API requests
-    const proxyUrl = 'https://api.allorigins.win/get';
+    const proxyUrl = 'https://api.allorigins.win/raw';
     const targetUrl = 'https://api.anthropic.com/v1/messages';
     
     try {
-      // First, make a preflight request
-      await fetch(`${proxyUrl}?url=${encodeURIComponent(targetUrl)}`, {
-        method: 'OPTIONS',
-        headers: {
-          'Access-Control-Request-Method': 'POST',
-          'Access-Control-Request-Headers': 'content-type,x-api-key,anthropic-version',
-          'Origin': 'null'
-        }
-      });
-
-      // Then make the actual request
       const response = await fetch(`${proxyUrl}?url=${encodeURIComponent(targetUrl)}`, {
         method: 'POST',
         headers: {
@@ -48,29 +37,27 @@ export const createAnthropicClient = (apiKey: string) => {
         throw new Error(`Failed to get response from AI: ${response.statusText}`);
       }
 
-      const proxyResponse = await response.json();
-      if (!proxyResponse.contents) {
-        throw new Error('Invalid proxy response');
-      }
-
-      const result = JSON.parse(proxyResponse.contents);
+      const result = await response.json();
       return result.content[0].text;
     } catch (error) {
       console.error('Error making API request:', error);
       // Try alternative approach
       try {
-        const altResponse = await fetch('https://api.allorigins.win/raw', {
+        const altResponse = await fetch('https://api.allorigins.win/get', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
             'Origin': 'null',
             'X-Requested-With': 'XMLHttpRequest'
           },
           body: JSON.stringify({
             url: targetUrl,
             method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': apiKey,
+              'anthropic-version': '2023-06-01'
+            },
             data: {
               model: 'claude-3-sonnet-20240229',
               max_tokens: maxTokens,
@@ -91,7 +78,8 @@ export const createAnthropicClient = (apiKey: string) => {
         }
 
         const altResult = await altResponse.json();
-        return altResult.content[0].text;
+        const parsedResult = JSON.parse(altResult.contents);
+        return parsedResult.content[0].text;
       } catch (altError) {
         console.error('Alternative approach also failed:', altError);
         throw error; // Throw original error if both attempts fail
