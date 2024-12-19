@@ -1,15 +1,16 @@
 import type { DataRow } from '../types';
 
-const CORS_PROXY = 'https://corsproxy.io/';
+const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
 
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
-    const response = await fetch(`${CORS_PROXY}?${encodeURIComponent('https://api.anthropic.com/v1/messages')}`, {
+    const response = await fetch(`${CORS_PROXY}${encodeURIComponent('https://api.anthropic.com/v1/messages')}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
+        'anthropic-version': '2023-06-01',
+        'Origin': 'https://stackblitz.com'
       },
       body: JSON.stringify({
         model: 'claude-3-sonnet-20240229',
