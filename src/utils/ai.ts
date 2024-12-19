@@ -2,10 +2,11 @@ import type { DataRow } from '../types';
 
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
-    // Try direct request first
+    // Try direct request first with CORS mode
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
+        mode: 'cors',
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
@@ -34,19 +35,15 @@ export const createAnthropicClient = (apiKey: string) => {
       return result.content[0].text;
     } catch (error) {
       console.error('Direct API request failed:', error);
-      // Try proxy approach
+      // Try no-cors mode
       try {
-        const proxyUrl = 'https://api.allorigins.win/raw';
-        const targetUrl = 'https://api.anthropic.com/v1/messages';
-        
-        const proxyResponse = await fetch(`${proxyUrl}?url=${encodeURIComponent(targetUrl)}`, {
+        const noCorsResponse = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
+          mode: 'no-cors',
           headers: {
             'Content-Type': 'application/json',
             'x-api-key': apiKey,
             'anthropic-version': '2023-06-01',
-            'Origin': 'null',
-            'X-Requested-With': 'XMLHttpRequest',
             'Accept': 'application/json'
           },
           body: JSON.stringify({
@@ -63,14 +60,14 @@ export const createAnthropicClient = (apiKey: string) => {
           })
         });
 
-        if (!proxyResponse.ok) {
-          throw new Error(`Proxy request failed: ${proxyResponse.statusText}`);
+        if (!noCorsResponse.ok) {
+          throw new Error(`No-CORS request failed: ${noCorsResponse.statusText}`);
         }
 
-        const proxyResult = await proxyResponse.json();
-        return proxyResult.content[0].text;
-      } catch (proxyError) {
-        console.error('Proxy request also failed:', proxyError);
+        const noCorsResult = await noCorsResponse.json();
+        return noCorsResult.content[0].text;
+      } catch (noCorsError) {
+        console.error('No-CORS request failed:', noCorsError);
         return `I apologize, but I'm currently unable to process your request due to browser security restrictions. This feature works best when running the application locally.
 
 To use this feature:
