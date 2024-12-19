@@ -2,19 +2,14 @@ import type { DataRow } from '../types';
 
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
-    // Use a proxy that's specifically designed for API requests
-    const proxyUrl = 'https://api.allorigins.win/raw';
-    const targetUrl = 'https://api.anthropic.com/v1/messages';
-    
+    // Try direct request first
     try {
-      const response = await fetch(`${proxyUrl}?url=${encodeURIComponent(targetUrl)}`, {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
           'anthropic-version': '2023-06-01',
-          'Origin': 'null',
-          'X-Requested-With': 'XMLHttpRequest',
           'Accept': 'application/json'
         },
         body: JSON.stringify({
@@ -32,23 +27,26 @@ export const createAnthropicClient = (apiKey: string) => {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API request failed:', errorText);
-        throw new Error(`Failed to get response from AI: ${response.statusText}`);
+        throw new Error(`API request failed: ${response.statusText}`);
       }
 
       const result = await response.json();
       return result.content[0].text;
     } catch (error) {
-      console.error('Error making API request:', error);
-      // Try alternative approach with direct request
+      console.error('Direct API request failed:', error);
+      // Try proxy approach
       try {
-        const altResponse = await fetch('https://api.anthropic.com/v1/messages', {
+        const proxyUrl = 'https://api.allorigins.win/raw';
+        const targetUrl = 'https://api.anthropic.com/v1/messages';
+        
+        const proxyResponse = await fetch(`${proxyUrl}?url=${encodeURIComponent(targetUrl)}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'x-api-key': apiKey,
             'anthropic-version': '2023-06-01',
+            'Origin': 'null',
+            'X-Requested-With': 'XMLHttpRequest',
             'Accept': 'application/json'
           },
           body: JSON.stringify({
@@ -65,21 +63,21 @@ export const createAnthropicClient = (apiKey: string) => {
           })
         });
 
-        if (!altResponse.ok) {
-          throw new Error(`Alternative approach failed: ${altResponse.statusText}`);
+        if (!proxyResponse.ok) {
+          throw new Error(`Proxy request failed: ${proxyResponse.statusText}`);
         }
 
-        const altResult = await altResponse.json();
-        return altResult.content[0].text;
-      } catch (altError) {
-        console.error('Alternative approach also failed:', altError);
-        // Return a user-friendly error message
-        return `I apologize, but I'm currently unable to process your request due to technical limitations in the browser environment. This feature works best when running the application locally.
+        const proxyResult = await proxyResponse.json();
+        return proxyResult.content[0].text;
+      } catch (proxyError) {
+        console.error('Proxy request also failed:', proxyError);
+        return `I apologize, but I'm currently unable to process your request due to browser security restrictions. This feature works best when running the application locally.
 
 To use this feature:
-1. Clone the repository
-2. Run locally with 'npm install && npm run dev'
-3. Use your Anthropic API key
+1. Clone the repository: git clone https://github.com/MarkScrivo/nfl-analytics-dashboard.git
+2. Install dependencies: npm install
+3. Start the app: npm run dev
+4. Use your Anthropic API key
 
 Error details: ${error instanceof Error ? error.message : 'Unknown error'}`;
       }
