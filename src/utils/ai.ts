@@ -41,9 +41,9 @@ export const createAnthropicClient = (apiKey: string) => {
       return result.content[0].text;
     } catch (error) {
       console.error('Error making API request:', error);
-      // Try alternative approach
+      // Try alternative approach with fetch streaming
       try {
-        const altResponse = await fetch('https://api.allorigins.win/get', {
+        const altResponse = await fetch('https://api.allorigins.win/raw', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -56,7 +56,8 @@ export const createAnthropicClient = (apiKey: string) => {
             headers: {
               'Content-Type': 'application/json',
               'x-api-key': apiKey,
-              'anthropic-version': '2023-06-01'
+              'anthropic-version': '2023-06-01',
+              'Accept': 'application/json'
             },
             data: {
               model: 'claude-3-sonnet-20240229',
@@ -69,7 +70,8 @@ export const createAnthropicClient = (apiKey: string) => {
                   text: content
                 }]
               }]
-            }
+            },
+            responseType: 'stream'
           })
         });
 
@@ -77,9 +79,20 @@ export const createAnthropicClient = (apiKey: string) => {
           throw new Error(`Alternative approach failed: ${altResponse.statusText}`);
         }
 
-        const altResult = await altResponse.json();
-        const parsedResult = JSON.parse(altResult.contents);
-        return parsedResult.content[0].text;
+        const reader = altResponse.body?.getReader();
+        if (!reader) {
+          throw new Error('No response body');
+        }
+
+        let responseText = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          responseText += new TextDecoder().decode(value);
+        }
+
+        const altResult = JSON.parse(responseText);
+        return altResult.content[0].text;
       } catch (altError) {
         console.error('Alternative approach also failed:', altError);
         throw error; // Throw original error if both attempts fail
