@@ -2,16 +2,18 @@ import type { DataRow } from '../types';
 
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
-    // Use a proxy that supports HTTPS and POST requests
-    const proxyUrl = 'https://api.allorigins.win/post?url=https://api.anthropic.com/v1/messages';
+    // Use a proxy that supports custom headers
+    const proxyUrl = 'https://api.allorigins.win/raw';
+    const targetUrl = 'https://api.anthropic.com/v1/messages';
     
     try {
-      const response = await fetch(proxyUrl, {
+      const response = await fetch(`${proxyUrl}?url=${encodeURIComponent(targetUrl)}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01'
+          'anthropic-version': '2023-06-01',
+          'x-requested-with': 'XMLHttpRequest'
         },
         body: JSON.stringify({
           model: 'claude-3-sonnet-20240229',
@@ -33,16 +35,44 @@ export const createAnthropicClient = (apiKey: string) => {
         throw new Error(`Failed to get response from AI: ${response.statusText}`);
       }
 
-      const proxyResponse = await response.json();
-      if (!proxyResponse.contents) {
-        throw new Error('Invalid proxy response');
-      }
-
-      const result = JSON.parse(proxyResponse.contents);
+      const result = await response.json();
       return result.content[0].text;
     } catch (error) {
       console.error('Error making API request:', error);
-      throw error;
+      // Try alternative proxy if first one fails
+      try {
+        const altProxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
+        const altResponse = await fetch(altProxyUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify({
+            model: 'claude-3-sonnet-20240229',
+            max_tokens: maxTokens,
+            temperature: 0,
+            messages: [{
+              role: 'user',
+              content: [{
+                type: 'text',
+                text: content
+              }]
+            }]
+          })
+        });
+
+        if (!altResponse.ok) {
+          throw new Error(`Alternative proxy failed: ${altResponse.statusText}`);
+        }
+
+        const altResult = await altResponse.json();
+        return altResult.content[0].text;
+      } catch (altError) {
+        console.error('Alternative proxy also failed:', altError);
+        throw error; // Throw original error if both proxies fail
+      }
     }
   };
 
