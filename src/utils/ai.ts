@@ -2,20 +2,10 @@ import type { DataRow } from '../types';
 
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
-    const proxyUrl = 'https://cors-anywhere.herokuapp.com/https://api.anthropic.com/v1/messages';
+    // Use thingproxy.freeboard.io as it's more reliable for API requests
+    const proxyUrl = 'https://thingproxy.freeboard.io/fetch/https://api.anthropic.com/v1/messages';
     
     try {
-      // First, make a preflight request
-      await fetch(proxyUrl, {
-        method: 'OPTIONS',
-        headers: {
-          'Access-Control-Request-Method': 'POST',
-          'Access-Control-Request-Headers': 'content-type,x-api-key,anthropic-version',
-          'Origin': 'https://stackblitz.com'
-        }
-      });
-
-      // Then make the actual request
       const response = await fetch(proxyUrl, {
         method: 'POST',
         headers: {
@@ -23,8 +13,7 @@ export const createAnthropicClient = (apiKey: string) => {
           'x-api-key': apiKey,
           'anthropic-version': '2023-06-01',
           'Origin': 'https://stackblitz.com',
-          'X-Requested-With': 'XMLHttpRequest',
-          'Accept': 'application/json'
+          'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify({
           model: 'claude-3-sonnet-20240229',
