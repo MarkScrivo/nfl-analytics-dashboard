@@ -2,8 +2,8 @@ import type { DataRow } from '../types';
 
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
-    // Use a direct proxy that supports POST requests
-    const proxyUrl = 'https://proxy.cors.sh/https://api.anthropic.com/v1/messages';
+    // Use a direct proxy with minimal headers
+    const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=https://api.anthropic.com/v1/messages';
     
     try {
       const response = await fetch(proxyUrl, {
@@ -11,9 +11,7 @@ export const createAnthropicClient = (apiKey: string) => {
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'x-cors-api-key': 'temp_d21234b0c0f1f6c6a0d54f3adf9af404',
-          'Origin': 'null'
+          'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
           model: 'claude-3-sonnet-20240229',
