@@ -1,57 +1,36 @@
 import type { DataRow } from '../types';
-import { mockInsights, generateMockResponse } from './mockResponses';
-
-const isStackBlitz = window.location.hostname.includes('stackblitz.io');
 
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
-    // In StackBlitz, always return mock responses
-    if (isStackBlitz) {
-      // Check if this is an insights request
-      if (content.includes('generate insights')) {
-        return JSON.stringify(mockInsights);
-      }
-      // For search queries, generate a mock response
-      return generateMockResponse(content);
-    }
-
-    try {
-      // For local development, use the API
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-3-sonnet-20240229',
-          max_tokens: maxTokens,
-          temperature: 0,
-          messages: [{
-            role: 'user',
-            content: [{
-              type: 'text',
-              text: content
-            }]
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-3-sonnet-20240229',
+        max_tokens: maxTokens,
+        temperature: 0,
+        messages: [{
+          role: 'user',
+          content: [{
+            type: 'text',
+            text: content
           }]
-        })
-      });
+        }]
+      })
+    });
 
-      if (!response.ok) {
-        throw new Error(`Failed to get response from AI: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      return result.content[0].text;
-    } catch (err) {
-      console.error('Error making API request:', err);
-      // Return mock responses as fallback
-      if (content.includes('generate insights')) {
-        return JSON.stringify(mockInsights);
-      }
-      return generateMockResponse(content);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API request failed:', errorText);
+      throw new Error(`Failed to get response from AI: ${response.statusText}`);
     }
+
+    const result = await response.json();
+    return result.content[0].text;
   };
 
   return { createMessage };
