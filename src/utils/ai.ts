@@ -4,9 +4,9 @@ const isStackBlitz = window.location.hostname.includes('stackblitz.io');
 
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
-    // Use CORS proxy in StackBlitz environment
+    // Use CORS.sh proxy in StackBlitz environment
     const baseUrl = isStackBlitz
-      ? 'https://cors-anywhere.herokuapp.com/https://api.anthropic.com/v1/messages'
+      ? 'https://proxy.cors.sh/https://api.anthropic.com/v1/messages'
       : '/api/anthropic';
 
     const response = await fetch(baseUrl, {
@@ -16,8 +16,8 @@ export const createAnthropicClient = (apiKey: string) => {
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
         ...(isStackBlitz && {
-          'Origin': 'https://stackblitz.com',
-          'X-Requested-With': 'XMLHttpRequest'
+          'x-cors-api-key': 'temp_d21234b0c0f1f6c6a0d54f3adf9af404', // Free tier key for testing
+          'Origin': 'https://stackblitz.com'
         })
       },
       body: JSON.stringify({
