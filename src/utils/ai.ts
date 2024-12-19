@@ -2,38 +2,56 @@ import type { DataRow } from '../types';
 
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
-    // Use a fetch proxy that supports CORS
-    const response = await fetch('https://cors-anywhere.herokuapp.com/https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'Origin': 'https://stackblitz.com',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: JSON.stringify({
-        model: 'claude-3-sonnet-20240229',
-        max_tokens: maxTokens,
-        temperature: 0,
-        messages: [{
-          role: 'user',
-          content: [{
-            type: 'text',
-            text: content
+    const proxyUrl = 'https://cors-anywhere.herokuapp.com/https://api.anthropic.com/v1/messages';
+    
+    try {
+      // First, make a preflight request
+      await fetch(proxyUrl, {
+        method: 'OPTIONS',
+        headers: {
+          'Access-Control-Request-Method': 'POST',
+          'Access-Control-Request-Headers': 'content-type,x-api-key,anthropic-version',
+          'Origin': 'https://stackblitz.com'
+        }
+      });
+
+      // Then make the actual request
+      const response = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'Origin': 'https://stackblitz.com',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'claude-3-sonnet-20240229',
+          max_tokens: maxTokens,
+          temperature: 0,
+          messages: [{
+            role: 'user',
+            content: [{
+              type: 'text',
+              text: content
+            }]
           }]
-        }]
-      })
-    });
+        })
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('API request failed:', errorText);
-      throw new Error(`Failed to get response from AI: ${response.statusText}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API request failed:', errorText);
+        throw new Error(`Failed to get response from AI: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      return result.content[0].text;
+    } catch (error) {
+      console.error('Error making API request:', error);
+      throw error;
     }
-
-    const result = await response.json();
-    return result.content[0].text;
   };
 
   return { createMessage };
