@@ -1,20 +1,27 @@
 import type { DataRow } from '../types';
+import { mockInsights, generateMockResponse } from './mockResponses';
 
 const isStackBlitz = window.location.hostname.includes('stackblitz.io');
 
 export const createAnthropicClient = (apiKey: string) => {
   const createMessage = async (content: string, maxTokens: number = 4096) => {
+    // In StackBlitz, return mock responses instead of making API calls
+    if (isStackBlitz) {
+      // Check if this is an insights request
+      if (content.includes('generate insights')) {
+        return JSON.stringify(mockInsights);
+      }
+      // For search queries, generate a mock response
+      return generateMockResponse(content);
+    }
+
     try {
-      // Direct API call with CORS headers
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, x-api-key, anthropic-version'
+          'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
           model: 'claude-3-sonnet-20240229',
@@ -40,17 +47,6 @@ export const createAnthropicClient = (apiKey: string) => {
       return result.content[0].text;
     } catch (err) {
       console.error('Error making API request:', err);
-      if (isStackBlitz) {
-        // Fallback message for StackBlitz environment
-        return `Due to CORS restrictions in the StackBlitz environment, the AI features are currently only available when running the application locally. 
-
-To test these features:
-1. Clone the repository
-2. Run locally with 'npm install && npm run dev'
-3. Use your Anthropic API key
-
-Error details: ${err instanceof Error ? err.message : 'Unknown error'}`;
-      }
       throw err;
     }
   };

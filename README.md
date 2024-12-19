@@ -15,16 +15,19 @@ A React-based dashboard for analyzing NFL game data with AI-powered insights and
   - Natural language queries
   - Automated visualization creation
 
-## Important Note About AI Features
+## Demo Environments
 
-Due to CORS restrictions:
-- AI features (Search and Insights) are fully functional when running the application locally
-- In the StackBlitz environment, these features will display a message explaining the limitation
-- To use AI features, please clone and run the project locally
+### StackBlitz Demo
+[Open in StackBlitz](https://stackblitz.com/github/MarkScrivo/nfl-analytics-dashboard)
 
-## Getting Started
+The StackBlitz demo includes:
+- All data visualization features
+- Mock AI responses for demonstration purposes
+- Example insights and analysis
+- No API key required
 
-### Local Development (Recommended for Full Features)
+### Local Development (Full Features)
+For full AI functionality with real-time Claude responses:
 
 1. Clone the repository:
 ```bash
@@ -44,15 +47,15 @@ npm run dev
 
 4. Open http://localhost:3000 in your browser
 
+## Using AI Features
+
 ### StackBlitz Demo
+- No API key required
+- Demonstrates UI and visualization capabilities
+- Uses pre-defined responses for common queries
+- Shows example insights and analysis patterns
 
-You can view a demo version on StackBlitz:
-[Open in StackBlitz](https://stackblitz.com/github/MarkScrivo/nfl-analytics-dashboard)
-
-Note: AI features require local development environment.
-
-## Using AI Features (Local Development)
-
+### Local Development
 1. Get an API key from Anthropic:
    - Visit https://console.anthropic.com/
    - Create an account and generate an API key
@@ -61,15 +64,15 @@ Note: AI features require local development environment.
    - Click the "AI Search" tab
    - Enter your Anthropic API key
    - Ask questions about the data in natural language
-   - Get AI-powered answers based on the analysis
+   - Get real-time AI-powered answers
 
 3. Using AI Insights:
    - Click the "AI Insights" tab
    - Enter your Anthropic API key
-   - Type your specific insight request (e.g., "Show me trends in home team performance")
-   - Get AI-generated insights with visualizations
+   - Type your specific insight request
+   - Get custom AI-generated insights with visualizations
 
-Example prompts for AI Insights:
+Example prompts:
 - "Analyze betting patterns for games with high spreads"
 - "Find correlations between weather conditions and scoring"
 - "Identify unusual betting line movements"
@@ -102,7 +105,7 @@ The dashboard expects CSV files with the following columns:
 - Plotly.js
 - TailwindCSS
 - Vite
-- Claude 3 Sonnet (AI)
+- Claude 3 Sonnet (AI in local development)
 
 ## Contributing
 
